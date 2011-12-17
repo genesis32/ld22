@@ -24,8 +24,8 @@ import org.newdawn.slick.util.ResourceLoader;
 @SuppressWarnings("deprecation")
 public class LD22 {
 	
-	private final int width = 800;
-	private final int height = 600;
+	private final int width = 640;
+	private final int height = 480;
 	
 	private Entity player;
 	private List<Entity> otherMiners = new ArrayList<Entity>();
@@ -45,11 +45,11 @@ public class LD22 {
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f);
 	    glVertex2f(0.0f, height);
-	    glTexCoord2f(1.0f, 0.0f);
+	    glTexCoord2f(0.625f, 0.0f);
 	    glVertex2f(width, height);
-	    glTexCoord2f(1.0f, 1.0f);
+	    glTexCoord2f(0.625f, 0.46875f);
 	    glVertex2f(width, 0.0f);
-	    glTexCoord2f(0.0f, 1.0f);
+	    glTexCoord2f(0.0f, 0.46875f);
 	    glVertex2f(0.0f, 0.0f);
 	    
 	    glEnd();
@@ -93,6 +93,15 @@ public class LD22 {
 			miner.textureName = TextureManager.OtherMinerTexture;
 			otherMiners.add(miner);			
 		}		
+		
+		for(int i=0; i < 1; i++) {	
+			Entity treasure = new Entity();
+			treasure.pos = Entity.getRandomPoint(width, height);
+			treasure.cdem = new Vector2f(34.0f, 64.0f);
+			treasure.textureName = TextureManager.TreasureTexture;
+			treasures.add(treasure);			
+		}	
+		
 	}
 	
 	public void start() {
@@ -172,6 +181,10 @@ public class LD22 {
        			if(player.intersects(miner)) {
        				System.out.println("OUCH");
        			}
+       		}
+       		
+       		for(Entity treasure: treasures) {
+       			DrawEntity(treasure);
        		}
        	  	
       		ttFont.drawString(0, 0, "Lonely Miner", Color.white);
