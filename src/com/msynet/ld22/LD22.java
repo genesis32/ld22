@@ -28,8 +28,13 @@ public class LD22 {
 	private final int height = 480;
 	
 	private Entity player;
-	private List<Entity> otherMiners = new ArrayList<Entity>();
-	private List<Entity> treasures = new ArrayList<Entity>();
+	private List<Miner> otherMiners = new ArrayList<Miner>();
+	private List<Treasure> treasures = new ArrayList<Treasure>();
+	
+	private Treasure superTreasure;
+	
+	private long elapsedTime = 0;
+	public static final long MaxGameTime = 30000;
 	
 	private TextureManager textureManager;
 
@@ -44,11 +49,11 @@ public class LD22 {
 		
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f);
-	    glVertex2f(0.0f, height);
+	    glVertex3f(0.0f, height, -0.1f);
 	    glTexCoord2f(0.625f, 0.0f);
-	    glVertex2f(width, height);
+	    glVertex3f(width, height, -0.1f);
 	    glTexCoord2f(0.625f, 0.46875f);
-	    glVertex2f(width, 0.0f);
+	    glVertex3f(width, 0.0f, -0.1f);
 	    glTexCoord2f(0.0f, 0.46875f);
 	    glVertex2f(0.0f, 0.0f);
 	    
@@ -86,8 +91,8 @@ public class LD22 {
 		player.cdem = new Vector2f(48.0f, 64.0f);
 		player.textureName = TextureManager.PlayerTextureName;
 		
-		for(int i=0; i < 1; i++) {	
-			Entity miner = new Entity();
+		for(int i=0; i < 3; i++) {	
+			Miner miner = new Miner();
 			miner.pos = Entity.getRandomPoint(width, height);
 			miner.cdem = new Vector2f(34.0f, 64.0f);
 			miner.textureName = TextureManager.OtherMinerTexture;
@@ -95,12 +100,18 @@ public class LD22 {
 		}		
 		
 		for(int i=0; i < 1; i++) {	
-			Entity treasure = new Entity();
+			Treasure treasure = new Treasure();
 			treasure.pos = Entity.getRandomPoint(width, height);
+			treasure.showAfterMs = 0;
 			treasure.cdem = new Vector2f(34.0f, 64.0f);
 			treasure.textureName = TextureManager.TreasureTexture;
 			treasures.add(treasure);			
 		}	
+		
+		superTreasure = new Treasure();
+		superTreasure.pos = Entity.getRandomPoint(width, height);
+		superTreasure.showAfterMs = 5000;
+		superTreasure.textureName = TextureManager.SuperTreasureTexture;
 		
 	}
 	
@@ -120,6 +131,9 @@ public class LD22 {
 		initEntities();
 		
 		glEnable(GL_TEXTURE_2D);
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+		
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);          
         
     	glEnable(GL_BLEND);
@@ -144,50 +158,66 @@ public class LD22 {
 			e.printStackTrace();
 		}
 		
-    	long lastTime, currTime;
-    	lastTime = currTime = getTime();
+    	long lastTime, currTime, startTime; 
+    	lastTime = currTime = startTime = getTime();
     	while (!Display.isCloseRequested()) {
     		    		
     		currTime = getTime();
     		long delta = currTime - lastTime;
     		lastTime = currTime;
     		
+    		elapsedTime = currTime - startTime;
+    		
     		player.update(delta);
     		for(Entity miner: otherMiners) {
        			miner.update(delta);
        		}
     		
-    		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-    			player.velocity.y = 0f;
-    			player.velocity.x = 100f;
-    		} else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-    			player.velocity.y = 0f;
-    			player.velocity.x = -100f;
-    		}else if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-    			player.velocity.x = 0f;
-    			player.velocity.y = -100f;
-    		}else if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-    			player.velocity.x = 0f;
-    			player.velocity.y = 100f;    			
+    		while(Keyboard.next()) {
+    			if(Keyboard.getEventKey() == Keyboard.KEY_RIGHT) {
+    				player.velocity.x = Keyboard.getEventKeyState() ? 120.0f : 0.0f;
+    			}
+    			if(Keyboard.getEventKey() == Keyboard.KEY_LEFT) {
+    				player.velocity.x = Keyboard.getEventKeyState() ? -120.0f : 0.0f;
+    			}
+    			if(Keyboard.getEventKey() == Keyboard.KEY_UP) {
+    				player.velocity.y = Keyboard.getEventKeyState() ? -120.0f : 0.0f;
+    			}
+    			if(Keyboard.getEventKey() == Keyboard.KEY_DOWN) {
+    				player.velocity.y = Keyboard.getEventKeyState() ? 120.0f : 0.0f;
+    			}
+    			    			
     		}
     		
      		glClear(GL_COLOR_BUFFER_BIT);
      		DrawBackground();
-     		
-       		DrawEntity(player);
        		
-       		for(Entity miner: otherMiners) {
-       			DrawEntity(miner);
-       			if(player.intersects(miner)) {
-       				System.out.println("OUCH");
+       		for(Treasure treasure: treasures) {
+       			if(elapsedTime > treasure.showAfterMs) {
+       				DrawEntity(treasure);
        			}
        		}
        		
-       		for(Entity treasure: treasures) {
-       			DrawEntity(treasure);
+       		if(elapsedTime >= superTreasure.showAfterMs) {
+       			DrawEntity(superTreasure);
        		}
+       		
+       		DrawEntity(player);
+       		
+       		for(Miner miner: otherMiners) {
+       			DrawEntity(miner);
+       			if(player.intersects(miner)) {
+       			
+       			}
+       		}
+       		
+       		if(elapsedTime > MaxGameTime) {
+       			ttFont.drawString(0, 0, "Game Over", Color.white);
+       		}
+       		
+       		long secRemaining = (MaxGameTime - elapsedTime) / 1000;
        	  	
-      		ttFont.drawString(0, 0, "Lonely Miner", Color.white);
+      		ttFont.drawString(0, 0, "!Alone - Time Remaining: " + Long.toString(secRemaining), Color.white);
     		
     		Display.update();
     		Display.sync(60);
