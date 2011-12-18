@@ -1,5 +1,7 @@
 package com.msynet.ld22;
 
+import javax.vecmath.Vector3f;
+
 public class Treasure extends Entity {
 
 	public boolean superTreasure = false;
@@ -21,5 +23,11 @@ public class Treasure extends Entity {
 			}
 		}
 	}
+	
+	@Override
+	public Vector3f getColor() {
+		return new Vector3f(1.0f, 1.0f, 1.0f);
+	}
+
 	
 }

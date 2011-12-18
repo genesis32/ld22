@@ -3,6 +3,7 @@ package com.msynet.ld22;
 import java.util.Random;
 
 import javax.vecmath.Vector2f;
+import javax.vecmath.Vector3f;
 
 public abstract class Entity {
 	
@@ -17,6 +18,8 @@ public abstract class Entity {
 	public float speed = 1.0f;
 	
 	public abstract String getTextureName();
+	
+	public abstract Vector3f getColor();
 	
 	public static Vector2f getRandomPoint(int xmax, int ymax) {
 		Random random = new Random(); 
@@ -48,10 +51,13 @@ public abstract class Entity {
 		
 	}
 	
-	public void gotoPoint(Vector2f pos) {
-		
+	public void gotoPoint(Vector2f epos) {
+		Vector2f vec = new Vector2f(epos.x - pos.x, epos.y - pos.y);
+		vec.normalize();
 		 
+		double rad = Math.atan2(vec.y, vec.x);
 		
+		this.heading = (float) Math.toDegrees(rad);
 	}
 	
 	public boolean intersects( Entity other ) {		

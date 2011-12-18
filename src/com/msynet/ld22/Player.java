@@ -1,5 +1,6 @@
 package com.msynet.ld22;
 
+import javax.vecmath.Vector3f;
 
 public class Player extends Entity {
 	
@@ -20,6 +21,9 @@ public class Player extends Entity {
 		return TextureManager.PlayerTextureName;
 	}
 	
+	public boolean isMining() {
+		return currentAction == PlayerAction.Mining;		
+	}
 	
 	@Override
 	public void update(long stepMs) {
@@ -32,8 +36,18 @@ public class Player extends Entity {
 		case Searching:
 			break;
 		}
-		
 	}
 	
-	
+	@Override
+	public Vector3f getColor() {
+		if(currentAction == PlayerAction.Mining) {
+			float comp = 1.0f - (float)(msMining / 1250.0f);
+			Vector3f res = new Vector3f(comp, comp, comp);
+			System.out.println(res);
+			return res;
+		}
+		
+		return new Vector3f(1.0f, 1.0f, 1.0f);
+	}
+
 }

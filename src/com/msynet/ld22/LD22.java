@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.vecmath.Vector2f;
+import javax.vecmath.Vector3f;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
@@ -37,6 +38,7 @@ public class LD22 {
 	
 	private long elapsedTime = 0;
 	public static final long MaxGameTime = 30000;
+	public static final long SuperTreasureAppearAfter = 20000;
 	
 	private TextureManager textureManager;
 	private SoundManager soundManager;
@@ -69,17 +71,19 @@ public class LD22 {
 		
 		glPushMatrix();
 		glLoadIdentity();
-	
+			
+		Vector3f color = ent.getColor();
+		
 		glTranslatef(ent.pos.x, ent.pos.y, 0.0f);
-		glColor3f(1.0f, 1.0f, 1.0f);		
+		glColor3f(color.x, color.y, color.z);		
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f);
 	    glVertex2f(-ent.dem.x/2.0f, -ent.dem.y/2.0f);
-	    glTexCoord2f(1.0f, 0.0f);
+	    glTexCoord2f(0.99f, 0.0f);
 	    glVertex2f(ent.dem.x/2.0f, -ent.dem.y/2.0f);
-	    glTexCoord2f(1.0f, 1.0f);
+	    glTexCoord2f(0.99f, 0.99f);
 	    glVertex2f(ent.dem.x/2.0f, ent.dem.y/2.0f);
-	    glTexCoord2f(0.0f, 1.0f);
+	    glTexCoord2f(0.0f, 0.99f);
 	    glVertex2f(-ent.dem.x/2.0f, ent.dem.y/2.0f);
 	   
 	    glEnd();
@@ -96,7 +100,12 @@ public class LD22 {
 	    	
 	    } else if(ent instanceof Player) {
 	    	Player player = (Player)ent;
-	    	minerFont.drawString(ent.pos.x, ent.pos.y, "NT: " + player.treasureMined, Color.green);
+	    	minerFont.drawString(ent.pos.x, ent.pos.y-30, "NT: " + player.treasureMined, Color.green);
+	    	
+	    	if(player.hasKey) {
+	    		minerFont.drawString(ent.pos.x, ent.pos.y+20, "K", Color.yellow);
+	    	}
+	
 	    }
 	}
 	
@@ -131,7 +140,7 @@ public class LD22 {
 		superTreasure = new Treasure();
 		superTreasure.pos = Entity.getRandomPoint(width, height);
 		superTreasure.superTreasure = true;
-		superTreasure.showAfterMs = 20000;
+		superTreasure.showAfterMs = SuperTreasureAppearAfter;
 		treasures.add(superTreasure);
 	}
 	
@@ -206,7 +215,7 @@ public class LD22 {
     	Font awtFont1 = new Font("Arial", Font.BOLD, 24);
     	statFont = new TrueTypeFont(awtFont1, true);
     	
-    	Font awtFont2 = new Font("Arial", Font.PLAIN, 8);
+    	Font awtFont2 = new Font("Arial", Font.PLAIN, 12);
     	minerFont = new TrueTypeFont(awtFont2, true);
 		
     	long lastTime, currTime, startTime; 
@@ -249,7 +258,14 @@ public class LD22 {
     					miner.alive = false;
     					player.treasureMined += miner.treasureMined;
     					miner.treasureMined = 0;
+    					if(miner.miningTreasure != null) {
+    						miner.miningTreasure.mining = false;
+    						miner.miningTreasure = null;
+    					}
     					player.hasKey = miner.hasKey;
+    					if(miner.hasKey) {
+    						miner.hasKey = false;
+    					}
     					soundManager.playSound(SoundManager.MinerKillSound);
     				} else {
     					
@@ -262,7 +278,6 @@ public class LD22 {
     							player.currentAction = PlayerAction.Mining;
     							treasure.mining = true;
     							soundManager.playSound(SoundManager.HitTreasureSound);
-
     						}
     					}
     					
@@ -273,8 +288,7 @@ public class LD22 {
     		
     		player.update(delta);
     		if (player.currentAction == PlayerAction.Mining) {
-				System.out.println(player.msMining);
-				if(player.msMining >= 2000) {
+				if(player.msMining >= 1250) {
 					System.out.println("mined");
 					player.miningTreasure.mined = true;
 					player.miningTreasure = null;
@@ -294,7 +308,6 @@ public class LD22 {
     						miner.msMined = 0;
     						miner.miningTreasure = treasure;
 							treasure.mining = true;
-							soundManager.playSound(SoundManager.HitTreasureSound);
     					}
     				} else if(miner.currentAction == MinerAction.Mining) {
     					if(miner.miningTreasure.mined) {
@@ -328,7 +341,7 @@ public class LD22 {
        		for(Treasure treasure: treasures) {
        			if(elapsedTime > treasure.showAfterMs) {
        				treasure.shown = true;
-       				if(treasure.superTreasure) {
+       				if(treasure.superTreasure && !treasure.mined) {
        					for(Miner miner: otherMiners) {
        						miner.gotoPoint(treasure.pos);
        					}

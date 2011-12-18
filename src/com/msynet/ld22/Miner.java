@@ -2,6 +2,10 @@ package com.msynet.ld22;
 
 import java.util.Random;
 
+import javax.vecmath.Vector3f;
+
+import com.msynet.ld22.Player.PlayerAction;
+
 public class Miner extends Entity {
 	
 	public enum MinerAction { Searching, Mining }
@@ -51,6 +55,19 @@ public class Miner extends Entity {
 		} else {
 			return TextureManager.DeadMinerTexture;
 		}
+	}
+
+
+	@Override
+	public Vector3f getColor() {
+		if(currentAction == MinerAction.Mining) {
+			float comp = 1.0f - (float)(msMined / 1250.0f);
+			Vector3f res = new Vector3f(comp, comp, comp);
+			System.out.println(res);
+			return res;
+		}
+		
+		return new Vector3f(1.0f, 1.0f, 1.0f);
 	}
 	
 }
