@@ -4,9 +4,9 @@ import java.util.Random;
 
 public class Miner extends Entity {
 	
-	public enum Action { Searching, Mining }
+	public enum MinerAction { Searching, Mining }
 	
-	public Action currentAction; 
+	public MinerAction currentAction; 
 	public Treasure miningTreasure = null;
 	public long elapsedMiningTime;
 	
