@@ -6,6 +6,7 @@ public class Treasure extends Entity {
 	public long    showAfterMs = 0;
 	public boolean mined = false;
 	public boolean mining = false;
+	public boolean shown = false;
 	
 	@Override
 	public String getTextureName() {

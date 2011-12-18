@@ -28,7 +28,7 @@ public abstract class Entity {
 	}
 	
 	private boolean willCollide(Vector2f newPos) {
-		return newPos.x < 0.0f || newPos.y < 0.0f || newPos.x >= 640.0f || newPos.y >= 480.0f;
+		return newPos.x < 0.0f || newPos.y < 0.0f || newPos.x >= 800.0f || newPos.y >= 600.0f;
 	}
 	
 	public void update(long stepMs) {		
@@ -45,6 +45,12 @@ public abstract class Entity {
 			this.heading = random.nextFloat() * 360.0f;	
 			update(stepMs);
 		}
+		
+	}
+	
+	public void gotoPoint(Vector2f pos) {
+		
+		 
 		
 	}
 	

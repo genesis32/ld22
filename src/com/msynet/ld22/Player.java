@@ -11,6 +11,7 @@ public class Player extends Entity {
 	public long msMining = 0;
 	public Treasure miningTreasure;
 	public long treasureMined = 0;
+	public boolean hasKey = false;
 	
 	public long numTreasureMined = 0;
 

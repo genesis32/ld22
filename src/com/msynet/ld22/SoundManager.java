@@ -13,7 +13,7 @@ public class SoundManager {
 	public static final String MinerKillSound = "minerkill";	
 	public static final String MiningSound = "mining";
 	public static final String MinedSound = "mined";
-	
+	public static final String HitTreasureSound = "hittreasure";
 	
 	public Map<String, Audio> map = new HashMap<String, Audio>();
 
@@ -22,6 +22,7 @@ public class SoundManager {
 
 			map.put(MinerKillSound,  AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("ugh.wav")));
 			map.put(MiningSound,  AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("mining.wav")));
+			map.put(HitTreasureSound,  AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("hittreasure.wav")));
 
 		} catch (IOException e) {
 

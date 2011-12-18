@@ -12,7 +12,7 @@ public class Miner extends Entity {
 	
 	public long msMined = 0;
 	public long treasureMined = 0;
-	
+	public boolean hasKey = false;
 	
 	
 	@Override

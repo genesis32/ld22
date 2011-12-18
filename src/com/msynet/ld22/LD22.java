@@ -23,8 +23,8 @@ import com.msynet.ld22.Player.PlayerAction;
 @SuppressWarnings("deprecation")
 public class LD22 {
 	
-	private final int width = 640;
-	private final int height = 480;
+	private final int width = 800;
+	private final int height = 600;
 	
 	TrueTypeFont statFont = null;
 	TrueTypeFont minerFont = null;
@@ -36,7 +36,7 @@ public class LD22 {
 	private Treasure superTreasure;
 	
 	private long elapsedTime = 0;
-	public static final long MaxGameTime = 20000;
+	public static final long MaxGameTime = 30000;
 	
 	private TextureManager textureManager;
 	private SoundManager soundManager;
@@ -71,7 +71,6 @@ public class LD22 {
 		glLoadIdentity();
 	
 		glTranslatef(ent.pos.x, ent.pos.y, 0.0f);
-	//	glRotatef(ent.heading, 0.0f, 0.0f, 1.0f);
 		glColor3f(1.0f, 1.0f, 1.0f);		
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f);
@@ -90,6 +89,11 @@ public class LD22 {
 	    if(ent instanceof Miner) {
 	    	Miner miner = (Miner)ent;
 	    	minerFont.drawString(ent.pos.x, ent.pos.y, "NT: " + miner.treasureMined, Color.red);
+	    	
+	    	if(miner.hasKey) {
+	    		minerFont.drawString(ent.pos.x, ent.pos.y+20, "K", Color.yellow);
+	    	}
+	    	
 	    } else if(ent instanceof Player) {
 	    	Player player = (Player)ent;
 	    	minerFont.drawString(ent.pos.x, ent.pos.y, "NT: " + player.treasureMined, Color.green);
@@ -101,10 +105,10 @@ public class LD22 {
 		player.alive = true;
 		player.pos = Entity.getRandomPoint(width, height);
 		player.currentAction = PlayerAction.Searching;
-		player.cdem = new Vector2f(48.0f, 64.0f);
+		player.cdem = new Vector2f(64.0f, 64.0f);
 	
 		
-		for(int i=0; i < 5; i++) {	
+		for(int i=0; i < 4; i++) {	
 			Miner miner = new Miner();
 			miner.alive = true;
 			miner.speed = 160.0f;
@@ -115,7 +119,7 @@ public class LD22 {
 			otherMiners.add(miner);			
 		}		
 		
-		for(int i=0; i < 9; i++) {	
+		for(int i=0; i < 17; i++) {	
 			Treasure treasure = new Treasure();
 			treasure.pos = Entity.getRandomPoint(width, height);
 			treasure.showAfterMs = 0;
@@ -127,12 +131,13 @@ public class LD22 {
 		superTreasure = new Treasure();
 		superTreasure.pos = Entity.getRandomPoint(width, height);
 		superTreasure.superTreasure = true;
-		superTreasure.showAfterMs = 15000;
+		superTreasure.showAfterMs = 20000;
+		treasures.add(superTreasure);
 	}
 	
 	public Treasure collidingWithTreasure(Entity ent) {
 		for(Treasure treasure: treasures) {
-			if(ent.intersects(treasure)) {
+			if(treasure.shown && ent.intersects(treasure)) {
 				return treasure;
 			}
 		}
@@ -242,31 +247,29 @@ public class LD22 {
     				Miner miner = this.collidingWithMiner(player);
     				if(miner != null && miner.alive) {
     					miner.alive = false;
+    					player.treasureMined += miner.treasureMined;
+    					miner.treasureMined = 0;
+    					player.hasKey = miner.hasKey;
     					soundManager.playSound(SoundManager.MinerKillSound);
     				} else {
     					
     					Treasure treasure = this.collidingWithTreasure(player);
-    					if(treasure != null && (!treasure.mined || !treasure.mining)) {
+    					if(treasure != null && (!treasure.mined || !treasure.mining) && !treasure.superTreasure) {
     					
     						if(player.currentAction == PlayerAction.Searching) {
     							player.msMining = 0;
     							player.miningTreasure = treasure;
     							player.currentAction = PlayerAction.Mining;
     							treasure.mining = true;
-    							System.out.println("mining");
+    							soundManager.playSound(SoundManager.HitTreasureSound);
+
     						}
     					}
     					
     				}
     				
-    				
-    				
     			}    			
     		}
-    		
-    		boolean endGameUpdate = elapsedTime > MaxGameTime;
-    		
-    		
     		
     		player.update(delta);
     		if (player.currentAction == PlayerAction.Mining) {
@@ -291,6 +294,7 @@ public class LD22 {
     						miner.msMined = 0;
     						miner.miningTreasure = treasure;
 							treasure.mining = true;
+							soundManager.playSound(SoundManager.HitTreasureSound);
     					}
     				} else if(miner.currentAction == MinerAction.Mining) {
     					if(miner.miningTreasure.mined) {
@@ -298,8 +302,14 @@ public class LD22 {
     						miner.miningTreasure = null;
     					} else if(miner.msMined >= 2000) {
     						miner.miningTreasure.mined = true;
+    						if(miner.miningTreasure.superTreasure) {
+        						miner.treasureMined += 3;
+        						miner.hasKey = true;
+    						} else {
+        						miner.treasureMined++;    							
+    						}
     						miner.miningTreasure = null;
-    						miner.treasureMined++;
+    						
     						miner.currentAction = MinerAction.Searching;
     						soundManager.playSound(SoundManager.MiningSound);
     					}
@@ -317,32 +327,42 @@ public class LD22 {
        		
        		for(Treasure treasure: treasures) {
        			if(elapsedTime > treasure.showAfterMs) {
+       				treasure.shown = true;
+       				if(treasure.superTreasure) {
+       					for(Miner miner: otherMiners) {
+       						miner.gotoPoint(treasure.pos);
+       					}
+       				}
        				DrawEntity(treasure);
        			}
-       		}
-       		
-       		if(elapsedTime >= superTreasure.showAfterMs) {
-       			DrawEntity(superTreasure);
        		}
        		
        		DrawEntity(player);
        		
        		for(Miner miner: otherMiners) {
        			DrawEntity(miner);
-       			if(player.intersects(miner)) {
-       			
-       			}
        		}
        		
        		if(elapsedTime > MaxGameTime) {
-       			if(this.numMinersAlive() == 0) {
-       				statFont.drawString(0, 440, "Game Over - You are all alone and you have no skills to open the super treasure box!", Color.white);       				
+       			if(this.numMinersAlive() == 0 && !player.hasKey && superTreasure.shown) {
+       				statFont.drawString(0, 440, "You Lost! - You are trapped and have no skills to open the key box!", Color.white);       				
+       			} else {
+       				boolean won = true;
+       				for(Miner miner: otherMiners) {
+       					if(miner.alive && miner.treasureMined > player.treasureMined) {
+       						won = false;
+       						statFont.drawString(0, 440, "You Lost! - Someone escaped with more treasure than you!", Color.white); 
+       					}
+       				}
+       				
+       				if(won) {
+       					statFont.drawString(0, 440, "You Won! - Sometimes it's best to not be alone!", Color.white);
+       				}
        			}
+       		} else {
+       			long secRemaining = (MaxGameTime - elapsedTime) / 1000;
+          		statFont.drawString(0, 0, "!Alone - Time Remaining: " + Long.toString(secRemaining), Color.white);
        		}
-       		
-       		long secRemaining = (MaxGameTime - elapsedTime) / 1000;
-       	  	
-      		statFont.drawString(0, 0, "!Alone - Time Remaining: " + Long.toString(secRemaining), Color.white);
     		
     		Display.update();
     		Display.sync(60);
