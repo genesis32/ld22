@@ -38,7 +38,7 @@ public class LD22 {
 	
 	private long elapsedTime = 0;
 	public static final long MaxGameTime = 30000;
-	public static final long SuperTreasureAppearAfter = 20000;
+	public static final long SuperTreasureAppearAfter = 24000;
 	
 	private TextureManager textureManager;
 	private SoundManager soundManager;
@@ -92,18 +92,18 @@ public class LD22 {
 	    
 	    if(ent instanceof Miner) {
 	    	Miner miner = (Miner)ent;
-	    	minerFont.drawString(ent.pos.x, ent.pos.y, "NT: " + miner.treasureMined, Color.red);
+	    	minerFont.drawString(ent.pos.x+20, ent.pos.y, "NT: " + miner.treasureMined, Color.red);
 	    	
 	    	if(miner.hasKey) {
-	    		minerFont.drawString(ent.pos.x, ent.pos.y+20, "K", Color.yellow);
+	    		minerFont.drawString(ent.pos.x+20, ent.pos.y+20, "K", Color.yellow);
 	    	}
 	    	
 	    } else if(ent instanceof Player) {
 	    	Player player = (Player)ent;
-	    	minerFont.drawString(ent.pos.x, ent.pos.y-30, "NT: " + player.treasureMined, Color.green);
+	    	minerFont.drawString(ent.pos.x+20, ent.pos.y-30, "NT: " + player.treasureMined, Color.green);
 	    	
 	    	if(player.hasKey) {
-	    		minerFont.drawString(ent.pos.x, ent.pos.y+20, "K", Color.yellow);
+	    		minerFont.drawString(ent.pos.x+20, ent.pos.y+20, "K", Color.yellow);
 	    	}
 	
 	    }
@@ -128,9 +128,12 @@ public class LD22 {
 			otherMiners.add(miner);			
 		}		
 		
-		for(int i=0; i < 17; i++) {	
+		for(int i=0; i < 20; i++) {	
 			Treasure treasure = new Treasure();
-			treasure.pos = Entity.getRandomPoint(width, height);
+			do {
+				treasure.pos = Entity.getRandomPoint(width, height);
+			} while(this.collidingWithTreasure(treasure) != null);
+				
 			treasure.showAfterMs = 0;
 			treasure.cdem = new Vector2f(34.0f, 64.0f);
 			
@@ -358,18 +361,18 @@ public class LD22 {
        		
        		if(elapsedTime > MaxGameTime) {
        			if(this.numMinersAlive() == 0 && !player.hasKey && superTreasure.shown) {
-       				statFont.drawString(0, 440, "You Lost! - You are trapped and have no skills to open the key box!", Color.white);       				
+       				statFont.drawString(0, 440, "You Lost! - You are trapped and have no skills to open the key box! Maybe you can't do it by yourself?", Color.white);       				
        			} else {
        				boolean won = true;
        				for(Miner miner: otherMiners) {
        					if(miner.alive && miner.treasureMined > player.treasureMined) {
        						won = false;
-       						statFont.drawString(0, 440, "You Lost! - Someone escaped with more treasure than you!", Color.white); 
+       						statFont.drawString(0, 440, "You Lost! - Someone escaped with more loot than you!", Color.white); 
        					}
        				}
        				
        				if(won) {
-       					statFont.drawString(0, 440, "You Won! - Sometimes it's best to not be alone!", Color.white);
+       					statFont.drawString(0, 440, "You Won! - You've escaped with the most loot!", Color.white);
        				}
        			}
        		} else {
