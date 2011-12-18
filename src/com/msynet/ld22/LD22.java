@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL11.*;
 import java.awt.Font;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -26,6 +27,8 @@ public class LD22 {
 	
 	public enum State { TitleScreen, GameScreen };
 	
+	public static Random random = new Random();
+	
 	private final int width = 800;
 	private final int height = 600;
 	
@@ -40,7 +43,7 @@ public class LD22 {
 	
 	private long elapsedTime = 0;
 	public static final long MaxGameTime = 30000;
-	public static final long SuperTreasureAppearAfter = 24000;
+	public static final long SuperTreasureAppearAfter = 23000;
 	
 	private TextureManager textureManager;
 	private SoundManager soundManager;
@@ -127,31 +130,45 @@ public class LD22 {
 			miner.alive = true;
 			miner.speed = 160.0f;
 			miner.pos = Entity.getRandomPoint(width, height);
-			miner.cdem = new Vector2f(34.0f, 64.0f);
+			miner.cdem = new Vector2f(64.0f, 64.0f);
 		
 			miner.currentAction = MinerAction.Searching;
 			otherMiners.add(miner);			
 		}		
 		
 		treasures.clear();
-		for(int i=0; i < 20; i++) {	
+		for(int i=0; i < 23; i++) {	
 			Treasure treasure = new Treasure();
 			do {
 				treasure.pos = Entity.getRandomPoint(width, height);
-			} while(this.collidingWithTreasure(treasure) != null);
+			} while(this.intersectsWithTreasure(treasure));
 				
 			treasure.showAfterMs = 0;
-			treasure.cdem = new Vector2f(34.0f, 64.0f);
+			treasure.cdem = new Vector2f(64.0f, 64.0f);
 			
 			treasures.add(treasure);			
 		}	
 		
 		superTreasure = new Treasure();
+		do {
+			superTreasure.pos = Entity.getRandomPoint(width, height);
+		} while(this.intersectsWithTreasure(superTreasure));
+
 		superTreasure.pos = Entity.getRandomPoint(width, height);
 		superTreasure.superTreasure = true;
 		superTreasure.showAfterMs = SuperTreasureAppearAfter;
 		treasures.add(superTreasure);
 	}
+	
+	public boolean intersectsWithTreasure(Entity ent) {
+		for(Treasure treasure: treasures) {
+			if(ent.intersects(treasure)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	
 	public Treasure collidingWithTreasure(Entity ent) {
 		for(Treasure treasure: treasures) {
@@ -197,10 +214,11 @@ public class LD22 {
 		statFont.drawString(10, 150, "* Use the arrow keys to move your miner.", Color.orange);
 		statFont.drawString(10, 180, "* Tap <spacebar> to kill a locksmith and take his loot.", Color.orange);
 		statFont.drawString(10, 210, "* Tap <spacebar> to open a treasure box with your pick.", Color.orange);
-		statFont.drawString(10, 240,"* The goal is to leave one locksmith alive to open the keybox at", Color.orange);
-		statFont.drawString(10, 270, " the end and escape with the most loot!", Color.orange);
+		statFont.drawString(10, 240, "* The goal is to leave one locksmith alive to open the keybox at", Color.orange);
+		statFont.drawString(10, 270, "  the end and escape with the most loot!", Color.orange);
+		statFont.drawString(10, 310, " You'll have to restart after each game. Sorry!", Color.orange);
 		
-		statFont.drawString(220, 330, "Press <spacebar> to begin.", Color.red);
+		statFont.drawString(220, 360, "Press <spacebar> to begin.", Color.red);
 								
 		Display.update();
 		Display.sync(60);
@@ -331,7 +349,7 @@ public class LD22 {
     		player.update(delta);
     		if (player.currentAction == PlayerAction.Mining) {
 				if(player.msMining >= 1250) {
-					System.out.println("mined");
+					player.miningTreasure.mining = false;
 					player.miningTreasure.mined = true;
 					player.miningTreasure = null;
 					player.treasureMined++;
@@ -356,6 +374,7 @@ public class LD22 {
     						miner.currentAction = MinerAction.Searching;
     						miner.miningTreasure = null;
     					} else if(miner.msMined >= 2000) {
+    						miner.miningTreasure.mining = false;
     						miner.miningTreasure.mined = true;
     						if(miner.miningTreasure.superTreasure) {
         						miner.treasureMined += 3;
@@ -383,9 +402,11 @@ public class LD22 {
        		for(Treasure treasure: treasures) {
        			if(elapsedTime > treasure.showAfterMs) {
        				treasure.shown = true;
-       				if(treasure.superTreasure && !treasure.mined) {
+       				if(treasure.superTreasure && (!treasure.mined && !treasure.mining)) {
        					for(Miner miner: otherMiners) {
-       						miner.gotoPoint(treasure.pos);
+       						if(miner.currentAction == MinerAction.Searching) {
+       							miner.gotoPoint(treasure.pos);
+       						}
        					}
        				}
        				DrawEntity(treasure);
@@ -416,7 +437,7 @@ public class LD22 {
        			}
        		} else {
        			long secRemaining = (MaxGameTime - elapsedTime) / 1000;
-          		statFont.drawString(0, 0, "!Alone - Time Remaining: " + Long.toString(secRemaining), Color.white);
+          		statFont.drawString(0, 0, "Time Remaining: " + Long.toString(secRemaining), Color.white);
        		}
     		
     		Display.update();

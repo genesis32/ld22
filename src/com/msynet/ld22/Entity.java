@@ -1,7 +1,5 @@
 package com.msynet.ld22;
 
-import java.util.Random;
-
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 
@@ -22,8 +20,7 @@ public abstract class Entity {
 	public abstract Vector3f getColor();
 	
 	public static Vector2f getRandomPoint(int xmax, int ymax) {
-		Random random = new Random(); 
-		return new Vector2f(random.nextInt(xmax), random.nextInt(ymax));		
+		return new Vector2f(LD22.random.nextInt(xmax), LD22.random.nextInt(ymax));		
 	}
 	
 	public Entity() {
@@ -44,8 +41,7 @@ public abstract class Entity {
 		if(!willCollide(newPos)) {
 			pos = newPos;
 		} else {
-			Random random = new Random();
-			this.heading = random.nextFloat() * 360.0f;	
+			this.heading = LD22.random.nextFloat() * 360.0f;	
 			update(stepMs);
 		}
 		

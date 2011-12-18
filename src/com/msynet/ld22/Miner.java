@@ -1,10 +1,6 @@
 package com.msynet.ld22;
 
-import java.util.Random;
-
 import javax.vecmath.Vector3f;
-
-import com.msynet.ld22.Player.PlayerAction;
 
 public class Miner extends Entity {
 	
@@ -31,10 +27,9 @@ public class Miner extends Entity {
 
 		case Searching:
 			this.speed = 180.0f;
-			Random random = new Random();
-			int changeDir = random.nextInt(256);
+			int changeDir = LD22.random.nextInt(256);
 			if(changeDir == 128) {
-				this.heading = random.nextFloat() * 360.0f;				
+				this.heading = LD22.random.nextFloat() * 360.0f;				
 			}
 			
 			break;

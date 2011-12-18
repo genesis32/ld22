@@ -43,7 +43,6 @@ public class Player extends Entity {
 		if(currentAction == PlayerAction.Mining) {
 			float comp = 1.0f - (float)(msMining / 1250.0f);
 			Vector3f res = new Vector3f(comp, comp, comp);
-			System.out.println(res);
 			return res;
 		}
 		
