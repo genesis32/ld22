@@ -63,7 +63,6 @@ public class Miner extends Entity {
 		if(currentAction == MinerAction.Mining) {
 			float comp = 1.0f - (float)(msMined / 1250.0f);
 			Vector3f res = new Vector3f(comp, comp, comp);
-			System.out.println(res);
 			return res;
 		}
 		
