@@ -4,19 +4,20 @@ import java.util.Random;
 
 import javax.vecmath.Vector2f;
 
-public class Entity {
-	
-	public String textureName;
+public abstract class Entity {
 	
 	public Vector2f pos =  new Vector2f();
 	
 	public Vector2f dem = new Vector2f(64.0f, 64.0f);
 	public Vector2f cdem = new Vector2f(64.0f, 64.0f); // collision dem
 	
-	public Vector2f velocity = new Vector2f();
+	public float heading;
+	public boolean alive = true;
 	
-	public float rotAngle = 0;
-		
+	public float speed = 1.0f;
+	
+	public abstract String getTextureName();
+	
 	public static Vector2f getRandomPoint(int xmax, int ymax) {
 		Random random = new Random(); 
 		return new Vector2f(random.nextInt(xmax), random.nextInt(ymax));		
@@ -26,20 +27,28 @@ public class Entity {
 		
 	}
 	
+	private boolean willCollide(Vector2f newPos) {
+		return newPos.x < 0.0f || newPos.y < 0.0f || newPos.x >= 640.0f || newPos.y >= 480.0f;
+	}
+	
 	public void update(long stepMs) {		
 		float fracSec = (float)((float)stepMs / 1000.0);
-
-		pos.x += (velocity.x * fracSec);
-		pos.y += (velocity.y * fracSec);
-	}
 		
-	public void follow(Entity other) {	
+		Vector2f newPos = new Vector2f();
+		newPos.x = pos.x + (float)(Math.cos(Math.toRadians(heading)) * fracSec) * speed;
+		newPos.y = pos.y + (float)(Math.sin(Math.toRadians(heading)) * fracSec) * speed;
 		
+		if(!willCollide(newPos)) {
+			pos = newPos;
+		} else {
+			Random random = new Random();
+			this.heading = random.nextFloat() * 360.0f;	
+			update(stepMs);
+		}
 		
 	}
 	
-	public boolean intersects( Entity other )
-	{		
+	public boolean intersects( Entity other ) {		
 	  float ulx = Math.max (pos.x, other.pos.x );
 	  float uly = Math.max (pos.y, other.pos.y );
 	  float lrx = Math.min (pos.x + cdem.x, other.pos.x + other.cdem.x );

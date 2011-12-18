@@ -12,10 +12,12 @@ public class TextureManager {
 	
 	public static final String PlayerTextureName = "player";	
 	public static final String OtherMinerTexture = "otherminer";
+	public static final String DeadMinerTexture = "deadminer";
+
 	public static final String BackgroundTexture = "background";
 	public static final String TreasureTexture = "treasure";
+	public static final String MinedTreasureTexture = "minedtreasure";
 	public static final String SuperTreasureTexture = "supertreasure";
-	
 	
 	public Map<String, Texture> map = new HashMap<String, Texture>();
 	
@@ -27,6 +29,9 @@ public class TextureManager {
 			map.put(BackgroundTexture, TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("bg.png")));
 			map.put(TreasureTexture, TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("treasure.png")));
 			map.put(SuperTreasureTexture, TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("supertreasure.png")));
+			map.put(DeadMinerTexture, TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("deadminer.png")));
+			map.put(MinedTreasureTexture, TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("minedtreasure.png")));
+
 					
 		} catch (IOException e) {
 			

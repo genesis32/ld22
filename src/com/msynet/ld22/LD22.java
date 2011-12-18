@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.vecmath.Vector2f;
 
@@ -21,22 +22,25 @@ import org.newdawn.slick.openal.AudioLoader;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.util.ResourceLoader;
 
+import com.msynet.ld22.Miner.Action;
+
 @SuppressWarnings("deprecation")
 public class LD22 {
 	
 	private final int width = 640;
 	private final int height = 480;
 	
-	private Entity player;
+	private Player player;
 	private List<Miner> otherMiners = new ArrayList<Miner>();
 	private List<Treasure> treasures = new ArrayList<Treasure>();
 	
 	private Treasure superTreasure;
 	
 	private long elapsedTime = 0;
-	public static final long MaxGameTime = 30000;
+	public static final long MaxGameTime = 20000;
 	
 	private TextureManager textureManager;
+	private SoundManager soundManager;
 
 	public long getTime() {
 		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
@@ -61,14 +65,14 @@ public class LD22 {
 	}
 	
 	public void DrawEntity(Entity ent) {
-		Texture texture = textureManager.map.get(ent.textureName);
+		Texture texture = textureManager.map.get(ent.getTextureName());
 		texture.bind();
 		
 		glPushMatrix();
 		glLoadIdentity();
 	
 		glTranslatef(ent.pos.x, ent.pos.y, 0.0f);
-		glRotatef(ent.rotAngle, 0.0f, 0.0f, 1.0f);
+	//	glRotatef(ent.heading, 0.0f, 0.0f, 1.0f);
 		
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f);
@@ -86,34 +90,60 @@ public class LD22 {
 	}
 	
 	public void initEntities () {
-		player = new Entity();
+		player = new Player();
+		player.alive = true;
 		player.pos = Entity.getRandomPoint(width, height);
 		player.cdem = new Vector2f(48.0f, 64.0f);
-		player.textureName = TextureManager.PlayerTextureName;
+	
 		
-		for(int i=0; i < 3; i++) {	
+		for(int i=0; i < 5; i++) {	
 			Miner miner = new Miner();
+			miner.alive = true;
+			miner.speed = 160.0f;
 			miner.pos = Entity.getRandomPoint(width, height);
 			miner.cdem = new Vector2f(34.0f, 64.0f);
-			miner.textureName = TextureManager.OtherMinerTexture;
+		
+			miner.currentAction = Action.Searching;
 			otherMiners.add(miner);			
 		}		
 		
-		for(int i=0; i < 1; i++) {	
+		for(int i=0; i < 9; i++) {	
 			Treasure treasure = new Treasure();
 			treasure.pos = Entity.getRandomPoint(width, height);
 			treasure.showAfterMs = 0;
 			treasure.cdem = new Vector2f(34.0f, 64.0f);
-			treasure.textureName = TextureManager.TreasureTexture;
+			
 			treasures.add(treasure);			
 		}	
 		
 		superTreasure = new Treasure();
 		superTreasure.pos = Entity.getRandomPoint(width, height);
-		superTreasure.showAfterMs = 5000;
-		superTreasure.textureName = TextureManager.SuperTreasureTexture;
-		
+		superTreasure.superTreasure = true;
+		superTreasure.showAfterMs = 15000;
 	}
+	
+	public Treasure collidingWithTreasure(Entity ent) {
+		for(Treasure treasure: treasures) {
+			if(ent.intersects(treasure)) {
+				return treasure;
+			}
+		}
+		return null;
+	}
+	
+	public Miner collidingWithMiner(Entity ent) {
+		for(Miner miner: otherMiners) {
+			if(ent.intersects(miner)) {
+				return miner;
+			}
+		}
+		return null;
+	}
+
+	public boolean collidingWithPlayer(Entity ent) {		
+		return player.intersects(ent);
+	}
+
 	
 	public void start() {
 		try {
@@ -127,6 +157,9 @@ public class LD22 {
 
 		textureManager = new TextureManager();
 		textureManager.initTextures();
+		
+		soundManager = new SoundManager();
+		soundManager.initSounds();
 		
 		initEntities();
 		
@@ -149,14 +182,6 @@ public class LD22 {
     	
     	Font awtFont = new Font("Arial", Font.BOLD, 24);
 		TrueTypeFont ttFont = new TrueTypeFont(awtFont, true);
-			
-		Audio wavEffect = null;
-		try {
-			wavEffect = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("hurt.wav"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
     	long lastTime, currTime, startTime; 
     	lastTime = currTime = startTime = getTime();
@@ -168,26 +193,57 @@ public class LD22 {
     		
     		elapsedTime = currTime - startTime;
     		
-    		player.update(delta);
-    		for(Entity miner: otherMiners) {
-       			miner.update(delta);
-       		}
+    		player.speed = 0.0f;
+    		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+    			player.heading = 0.0f;
+    			player.speed = Player.Speed;
+    		}
+    		else if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+    			player.heading = 180.0f;
+    			player.speed = Player.Speed;
+    		}
+    		else if(Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+    			player.heading = 270.0f;
+    			player.speed = Player.Speed;
+    		}
+    		else if(Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+    			player.heading = 90.0f;
+    			player.speed = Player.Speed;
+    		}
     		
     		while(Keyboard.next()) {
-    			if(Keyboard.getEventKey() == Keyboard.KEY_RIGHT) {
-    				player.velocity.x = Keyboard.getEventKeyState() ? 120.0f : 0.0f;
-    			}
-    			if(Keyboard.getEventKey() == Keyboard.KEY_LEFT) {
-    				player.velocity.x = Keyboard.getEventKeyState() ? -120.0f : 0.0f;
-    			}
-    			if(Keyboard.getEventKey() == Keyboard.KEY_UP) {
-    				player.velocity.y = Keyboard.getEventKeyState() ? -120.0f : 0.0f;
-    			}
-    			if(Keyboard.getEventKey() == Keyboard.KEY_DOWN) {
-    				player.velocity.y = Keyboard.getEventKeyState() ? 120.0f : 0.0f;
-    			}
-    			    			
+    			if(Keyboard.getEventKey() == Keyboard.KEY_SPACE && Keyboard.getEventKeyState()) {
+    				System.out.println("SHANK!");
+    				Miner miner = this.collidingWithMiner(player);
+    				if(miner != null) {
+    					miner.alive = false;
+    					soundManager.playSound(SoundManager.MinerKillSound);
+    				}
+    			}    			
     		}
+    		
+    		player.update(delta);
+    		for(Miner miner: otherMiners) {
+    			
+    			if(miner.alive) {
+    				miner.update(delta);
+    				if(miner.currentAction == Action.Searching) {
+        				Treasure treasure = this.collidingWithTreasure(miner);
+    					if(treasure != null && !treasure.mined) {
+    						miner.currentAction = Action.Mining;
+    						miner.miningTreasure = treasure;
+    					
+    					}
+    				} else if(miner.currentAction == Action.Mining) {
+    					if(miner.msMined >= 2000) {
+    						miner.miningTreasure.mined = true;
+    						miner.msMined = 0;
+    						miner.currentAction = Action.Searching;
+    						soundManager.playSound(SoundManager.MiningSound);
+    					}
+    				}
+    			}
+       		}
     		
      		glClear(GL_COLOR_BUFFER_BIT);
      		DrawBackground();
@@ -212,6 +268,7 @@ public class LD22 {
        		}
        		
        		if(elapsedTime > MaxGameTime) {
+       			
        			ttFont.drawString(0, 0, "Game Over", Color.white);
        		}
        		
