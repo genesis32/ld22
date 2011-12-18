@@ -24,6 +24,8 @@ import com.msynet.ld22.Player.PlayerAction;
 @SuppressWarnings("deprecation")
 public class LD22 {
 	
+	public enum State { TitleScreen, GameScreen };
+	
 	private final int width = 800;
 	private final int height = 600;
 	
@@ -42,6 +44,8 @@ public class LD22 {
 	
 	private TextureManager textureManager;
 	private SoundManager soundManager;
+	
+	private State screenState = State.TitleScreen;
 
 	public long getTime() {
 		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
@@ -116,6 +120,7 @@ public class LD22 {
 		player.currentAction = PlayerAction.Searching;
 		player.cdem = new Vector2f(64.0f, 64.0f);
 	
+		otherMiners.clear();
 		
 		for(int i=0; i < 4; i++) {	
 			Miner miner = new Miner();
@@ -128,6 +133,7 @@ public class LD22 {
 			otherMiners.add(miner);			
 		}		
 		
+		treasures.clear();
 		for(int i=0; i < 20; i++) {	
 			Treasure treasure = new Treasure();
 			do {
@@ -179,10 +185,32 @@ public class LD22 {
 		return player.intersects(ent);
 	}
 
+	public void showTitleScreen() {
+		glClear(GL_COLOR_BUFFER_BIT); 
+		
+		statFont.drawString(120, 0, "LD22 game - Damn Locksmiths! ddm (@dmassey640k)", Color.yellow);
+
+		statFont.drawString(10, 50, "You're a miner stuck in a cave with a bunch of damn locksmiths.", Color.white);
+		statFont.drawString(10, 80, "They don't deserve YOUR loot! But alas you need to work together. ", Color.white);
+		statFont.drawString(10, 110, "It's never good to work alone! ", Color.white);
+		
+		statFont.drawString(10, 150, "* Use the arrow keys to move your miner.", Color.orange);
+		statFont.drawString(10, 180, "* Tap <spacebar> to kill a locksmith and take his loot.", Color.orange);
+		statFont.drawString(10, 210, "* Tap <spacebar> to open a treasure box with your pick.", Color.orange);
+		statFont.drawString(10, 240,"* The goal is to leave one locksmith alive to open the keybox at", Color.orange);
+		statFont.drawString(10, 270, " the end and escape with the most loot!", Color.orange);
+		
+		statFont.drawString(220, 330, "Press <spacebar> to begin.", Color.red);
+								
+		Display.update();
+		Display.sync(60);
+	}
+	
 	
 	public void start() {
 		try {
 			Display.setDisplayMode(new DisplayMode(width, height));
+			Display.setTitle("LD22 - Damn Locksmiths! - ddm (@dmassey640k)");
 			Display.create();
 			Display.setVSyncEnabled(true);
 		} catch (LWJGLException e) {
@@ -196,6 +224,7 @@ public class LD22 {
 		soundManager = new SoundManager();
 		soundManager.initSounds();
 		
+		this.screenState = State.TitleScreen;
 		initEntities();
 		
 		glEnable(GL_TEXTURE_2D);
@@ -226,6 +255,16 @@ public class LD22 {
     	
     	while (!Display.isCloseRequested()) {
     		    		
+    		if(this.screenState == State.TitleScreen) {
+    			while(Keyboard.next()) {
+        			if(Keyboard.getEventKey() == Keyboard.KEY_SPACE && Keyboard.getEventKeyState()) {
+        				this.screenState = State.GameScreen;
+        			}
+    			}
+    			this.showTitleScreen();
+    			continue;
+    		}
+    		
     		currTime = getTime();
     		long delta = currTime - lastTime;
     		lastTime = currTime;
