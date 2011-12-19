@@ -1,6 +1,6 @@
 package com.msynet.ld22;
 
-import javax.vecmath.Vector3f;
+import org.lwjgl.util.vector.Vector3f;
 
 public class Treasure extends Entity {
 

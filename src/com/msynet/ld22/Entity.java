@@ -1,7 +1,7 @@
 package com.msynet.ld22;
 
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
+import org.lwjgl.util.vector.Vector2f;
+import org.lwjgl.util.vector.Vector3f;
 
 public abstract class Entity {
 	
@@ -48,8 +48,8 @@ public abstract class Entity {
 	}
 	
 	public void gotoPoint(Vector2f epos) {
-		Vector2f vec = new Vector2f(epos.x - pos.x, epos.y - pos.y);
-		vec.normalize();
+		Vector2f vec = new Vector2f(epos.x - pos.x, epos.y - pos.y);		
+		vec.normalise();
 		 
 		double rad = Math.atan2(vec.y, vec.x);
 		
