@@ -41,8 +41,13 @@ public abstract class Entity {
 		if(!willCollide(newPos)) {
 			pos = newPos;
 		} else {
-			this.heading = LD22.random.nextFloat() * 360.0f;	
-			update(stepMs);
+			do {
+				this.heading = LD22.random.nextFloat() * 360.0f;	
+				newPos.x = pos.x + (float)(Math.cos(Math.toRadians(heading)) * fracSec) * speed;
+				newPos.y = pos.y + (float)(Math.sin(Math.toRadians(heading)) * fracSec) * speed;
+			}while(willCollide(newPos));
+			
+			pos = newPos;
 		}
 		
 	}
